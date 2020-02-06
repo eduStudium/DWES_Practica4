@@ -1,0 +1,33 @@
+var mongo = require('mongodb')
+var MongoClient = mongo.MongoClient
+var urlbbdd = "mongodb://localhost:27017/"
+const http = require('http');
+const url = require('url');
+const server = http.createServer();
+server.on('request', function(peticion, respuesta) {
+    let urlGeneral = url.parse(peticion.url, true);
+    let parametros = urlGeneral.query
+    let salida = "";
+    if(urlGeneral.pathname=="/numero"){
+        if(parametros.n=="4"){
+                MongoClient.connect(urlbbdd, { useNewUrlParser: true,useUnifiedTopology: true }, function (err, db) {
+                    if (err) {
+                        throw err
+                    }
+                var dbo = db.db("practica4BBDD")
+                salida = dbo.collection("personajes").find( { hogwartsStudent: true, alive: true}).project({ name: 1,species: 1 }).toArray(function (err, result) {
+                    if (err) throw err                  
+                        respuesta.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});
+                        respuesta.write("<table align=center border=1px><th>Nombre</th><th>Especie</th>  ");
+                        result.forEach(salida => respuesta.write("<tr><td>"+salida.name+"</td><td>"+salida.species+"</td></tr>"));
+                        respuesta.write("</table>");
+                        respuesta.end();
+                    
+                    db.close()
+                    })
+                })
+            } 
+        }    
+});
+server.listen(8081, '127.0.0.1');
+console.log('ejecutado');
